@@ -57,9 +57,9 @@ function VMProps() {
 		else
 			validators = data.validators;
 		
-		dialogOrigin = data.dialogOrigin ? data.dialogOrigin : 'https://jsdelivr.net';
-		dialogOrigin = data.prohibitedHosts ? data.prohibitedHosts : [/http[s]?:\/\/(.+[.])?jsdelivr.[^/]+/];
-		dialogSrc = data.dialogSrc ? data.dialogSrc : 'https://cdn.jsdelivr.net/gh/razuhl/vmms@master/vmprops.html';
+		dialogOrigin = data.dialogOrigin ? data.dialogOrigin : 'https://raw.githack.com/';
+		prohibitedHosts = data.prohibitedHosts ? data.prohibitedHosts : [/http[s]?:\/\/(.+[.])?githack.[^/]+/];
+		dialogSrc = data.dialogSrc ? data.dialogSrc : 'https://raw.githack.com/razuhl/vmms/master/vmprops.html';
 		
 		values = {};
         
