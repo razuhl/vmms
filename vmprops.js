@@ -211,7 +211,7 @@ function VMProps() {
 	}
 	
 	function handshakeListener(e) {
-		if ( e.type === 'message' && ( e.origin === testOrigin || e.origin === liveOrigin ) ) {
+		if ( e.type === 'message' && e.origin === dialogOrigin ) {
 			if ( typeof e.data !== 'undefined' ) {
 				if ( typeof e.data === 'object' && typeof e.data.publicKey !== 'undefined' ) {
 					if ( dialogPublicKey === null ) {
