@@ -57,9 +57,9 @@ function VMProps() {
 		else
 			validators = data.validators;
 		
-		dialogOrigin = data.dialogOrigin ? data.dialogOrigin : 'https://raw.githack.com/';
+		dialogOrigin = data.dialogOrigin ? data.dialogOrigin : 'https://razuhl.github.io';
 		prohibitedHosts = data.prohibitedHosts ? data.prohibitedHosts : [/http[s]?:\/\/(.+[.])?githack.[^/]+/];
-		dialogSrc = data.dialogSrc ? data.dialogSrc : 'https://raw.githack.com/razuhl/vmms/master/vmprops.html';
+		dialogSrc = data.dialogSrc ? data.dialogSrc : 'https://razuhl.github.io/vmms/vmprops.html';
 		
 		values = {};
         
