@@ -34,7 +34,7 @@ function VMProps() {
 	var dialogSrc;
 	
     var props, values, validators, storageKey, title, dialogWindow, dialogWindowOrigin, dlgSize, 
-	dialogPublicKey, rsaKey, aesKey;
+	dialogPublicKey, rsaKey, aesKey, onSave;
     
     /**
      * Initialize configuration 
@@ -58,18 +58,20 @@ function VMProps() {
 			validators = data.validators;
 		
 		dialogOrigin = data.dialogOrigin ? data.dialogOrigin : 'https://razuhl.github.io';
-		prohibitedHosts = data.prohibitedHosts ? data.prohibitedHosts : [/http[s]?:\/\/(.+[.])?githack.[^/]+/];
+		prohibitedHosts = data.prohibitedHosts ? data.prohibitedHosts : [/http[s]?:\/\/(.+[.])?github([.][^/]+)?/];
 		dialogSrc = data.dialogSrc ? data.dialogSrc : 'https://razuhl.github.io/vmms/vmprops.html';
 		
 		values = {};
         
-		title = data.title ? data.title : typeof GM_getMetadata == 'function' ? GM_getMetadata('name') : 'Unknown';
+		title = data.title ? data.title : 'Configure';
+		
+		storageKey = data.storageKey ? data.storageKey : 
+			typeof GM_getMetadata == 'function' ? '_VMProps_storage_' + GM_getMetadata('name').replace(/[^a-zA-Z0-9]/g, '_') : 
+			'_VMProps_storage_Unknown';
+		
 		dlgSize = data.dlgSize;
 		
-        /* Make a safe version of title to be used as stored value identifier */ 
-        var safeTitle = title.replace(/[^a-zA-Z0-9]/g, '_');
-
-        storageKey = '_VMProps_storage_' + safeTitle;
+		onSave = typeof data.onSave === 'function' ? data.onSave : null;
         
         var storedValues;
         
@@ -78,10 +80,10 @@ function VMProps() {
 
         for (var name in props) {
             if (storedValues && storedValues[name] !== undefined)
-                set(name, storedValues[name]);            
+                _set(name, storedValues[name]);            
             else if (props[name]['default'] !== undefined) 
-				set(name, props[name]['default']);
-            else set(name, null);
+				_set(name, props[name]['default']);
+            else _set(name, null);
         }
 	
         if ( data.menuCommand ) {
@@ -89,25 +91,25 @@ function VMProps() {
         }
     }
     
-    function get(name) {
+    function _get(name) {
         return values[name];
     }
     
-    function set(name, value) {
+    function _set(name, value) {
         values[name] = value;
     }
     
-    function resetValue(name) {
+    function _resetValue(name) {
 		if ( typeof name !== 'undefined' ) {
 			if ( typeof props[name] !== 'undefined' ) {
 				if ( typeof props[name]['default'] !== 'undefined' ) {
-					set(name, props[name]['default']);
+					_set(name, props[name]['default']);
 				}
 			}
 		} else {
 			for (var name in props) {
 				if (typeof props[name]['default'] !== 'undefined') {
-					set(name, props[name]['default']);
+					_set(name, props[name]['default']);
 				}
 			}
 		}
@@ -136,27 +138,41 @@ function VMProps() {
 	function reportFailure(originalLifecycle, validations) {
 		sendMessage({lifecycle: originalLifecycle+'Failure', validations: validations});
 	}
+	
+	function saveValues(newValues, validations) {
+		var isValid = true;
+		
+		if ( typeof validators !== 'undefined' ) {
+			for ( var name in validators ) {
+				var messages = [];
+				if ( !validators[name](newValues[name],messages) ) {
+					isValid = false;
+					validations[name] = { isValid: false, messages: messages };
+				} else {
+					validations[name] = { isValid: true, messages: messages };
+				}
+			}
+		}
+		if ( isValid ) {
+			GM_setValue(storageKey, JSON.stringify(newValues));
+			values = JSON.parse(GM_getValue(storageKey));
+			try {
+				if ( onSave !== null ) onSave(newValues);
+			} catch (errOnCallback) {
+				console.log('Error was thrown during user defined onSave callback!');
+				console.log(errOnCallback);
+			}
+		}
+		
+		return isValid;
+	}
     
     function receivedMessage(data) {
         try{
 			if ( data.lifecycle === 'Save' ) {
 				try {
-					var isValid = true;
-					if ( typeof validators !== 'undefined' ) {
-						var validations = {};
-						for ( var name in validators ) {
-							var messages = [];
-							if ( !validators[name](data.values[name],messages) ) {
-								isValid = false;
-								validations[name] = { isValid: false, messages: messages };
-							} else {
-								validations[name] = { isValid: true, messages: messages };
-							}
-						}
-					}
-					if ( isValid ) {
-						GM_setValue(storageKey, JSON.stringify(data.values));
-						values = JSON.parse(GM_getValue(storageKey));
+					var validations = {};
+					if ( saveValues(data.values, validations) ) {
 						reportSuccess(data.lifecycle,validations);
 					} else {
 						reportFailure(data.lifecycle,validations);
@@ -197,7 +213,6 @@ function VMProps() {
 						console.log('invalid data detected!');
 						return;
 					}
-					console.log(data);
 					if ( typeof data.lifecycle !== 'undefined' && data.lifecycle !== null ) {
 						receivedMessage(data);
 					}
@@ -326,4 +341,13 @@ function VMProps() {
     }
 	
     init(arguments[0]);
+	
+	//exposing methods for value cache
+	this.get = _get;
+	this.set = _set;
+	this.resetValue = _resetValue;
+	this.save = function(validations) {
+		if ( typeof validations === 'undefined' || validations === null ) validations = {};
+		return saveValues(values,validations);
+	}
 }

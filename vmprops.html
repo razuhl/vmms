@@ -160,9 +160,8 @@
 										return;
 									}
 									data = JSON.parse(data);
-									console.log(data);
 									if ( typeof data !== 'object' ) {
-										console.log('invalid data detected: ' + data + typeof data);
+										console.log('invalid data detected!');
 										return;
 									}
 									if ( data.lifecycle === 'Configure' ) {
