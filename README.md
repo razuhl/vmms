@@ -35,58 +35,58 @@ The VMProps object can be used to manage the values through get, set and save me
 
 var cfg = new VMProps({
 	//default title is Configure
-    title: 'My Settings',
+	title: 'My Settings',
 	//default storageKey is "_VMProps_storage_" plus all ASCII letters and numbers from the script name. If GM_getMetadata is not allowed its "_VMProps_storage_Unknown".
 	storageKey: 'ConfigurationDemo',
 	//xl, l, s => bootstrap styles: modal-xl, modal-lg, modal-sm
-    dlgSize: 'l',
+	dlgSize: 'l',
 	//registers the menu action for monkey calling "[VMProps].open();"
-    menuCommand: true,
+	menuCommand: true,
 	//a map of available settings
-    props: {
+	props: {
 		//variable name
-        textAreaVariable: {
+		textAreaVariable: {
 			//type can be 'textarea', 'text', 'checkbox', 'select', 'list_text'
-            type: 'textarea',
-            label: 'Multiline Text',
+			type: 'textarea',
+			label: 'Multiline Text',
 			//default values that the user can reset to.
-            default: 'Some kind dof drawn out inconclusive rambling with fairly underwhelming impact on anything in the realm of existince or for that matter beyond it.',
-            tooltip: 'You can type multiline content here.'
-        },
-        textVariable: {
-            type: 'text',
-            label: 'Text',
-            default: '',
-            tooltip: 'Single line'
-        },
-        booleanVariable: {
-            type: 'checkbox',
-            label: 'A Checkbox',
-            default: true,
-            tooltip: 'True or False flag.'
-        },
-        selectVariable: {
-            type: 'select',
-            label: 'Pick one',
-            default: 3,
-            options: [{label:'One',value:1},{label:'Two',value:2},{label:'Three',value:3}],
-            tooltip: 'A label/value list that the user can choose from.'
-        },
-        listTextVariable: {
-            type: 'list_text',
-            label: 'Text List',
-            default: ['first line','second line','third line'],
-            tooltip: 'Variable length list of single independant lines.'
-        }
-    },
+			default: 'Some kind dof drawn out inconclusive rambling with fairly underwhelming impact on anything in the realm of existince or for that matter beyond it.',
+			tooltip: 'You can type multiline content here.'
+		},
+		textVariable: {
+			type: 'text',
+			label: 'Text',
+			default: '',
+			tooltip: 'Single line'
+		},
+		booleanVariable: {
+			type: 'checkbox',
+			label: 'A Checkbox',
+			default: true,
+			tooltip: 'True or False flag.'
+		},
+		selectVariable: {
+			type: 'select',
+			label: 'Pick one',
+			default: 3,
+			options: [{label:'One',value:1},{label:'Two',value:2},{label:'Three',value:3}],
+			tooltip: 'A label/value list that the user can choose from.'
+		},
+		listTextVariable: {
+			type: 'list_text',
+			label: 'Text List',
+			default: ['first line','second line','third line'],
+			tooltip: 'Variable length list of single independant lines.'
+		}
+	},
 	//validation references the properties by their variable name and must conclude by returning true before values can be saved.
-    validators: {
+	validators: {
 		//The validation function gets the new value as first argument and a list of string messages to display for the variable as second argument. It must return a boolean result.
 		//Messages can be displayed whether the validation is true or false.
-        textAreaVariable: function(value, messages) { if ( value === 'ok' ) return true; messages.push('must  be ok'); return false; },
-        booleanVariable: function(value, messages) { if ( value ) return true; messages.push('must be true'); return false; },
-        listTextVariable: function(value, messages) { if ( value.length == 2 ) return true; messages.push('must be two'); return false; }
-    },
+		textAreaVariable: function(value, messages) { if ( value === 'ok' ) return true; messages.push('must  be ok'); return false; },
+		booleanVariable: function(value, messages) { if ( value ) return true; messages.push('must be true'); return false; },
+		listTextVariable: function(value, messages) { if ( value.length == 2 ) return true; messages.push('must be two'); return false; }
+	},
 	//callback that can be used to react to value changes
 	onSave: function(values) { console.log(JSON.stringify(values)); }
 });
@@ -99,14 +99,14 @@ console.log(cfg.save({}));
 
 ### NoScript
 
-If NoScript is in use an excemption for "razuhl.github.io" must be made. All dependencies are hosted through GitHub Pages which allows users to whitelist exactly one users content and won't grant libraries like jQuery to other pages by using a common cdn link.
+If NoScript is in use an exemption for "razuhl.github.io" must be made. All dependencies are hosted through GitHub Pages which allows users to whitelist exactly one users content and won't grant libraries like jQuery to other pages by using a common cdn link.
 
 ### Hosting
 
 The script can either be configured when initialized or the default values for dialogOrigin, prohibitedHosts and dialogSrc can be edited to accommodate the new host.
 
-dialogOrigin: The exact spelling of the origin reported by messages from "vmprops.html". The origin can be inspected by registering a listener before trying to open the dialog "window.addEventListener('message', function(e){console.log(e);});".
+- **dialogOrigin** The exact spelling of the origin reported by messages from "vmprops.html". The origin can be inspected by registering a listener before trying to open the dialog "window.addEventListener('message', function(e){console.log(e);});".
 
-prohibitedHosts: This is an array of regular expressions that if any matches the calling pages "document.domain" property will prohibit opening of the dialog. This is done to prevent the invalidation of cross site access safeguards which protect the dialogs scripting data. At least one of the reg expressions should match the dialogs host. By default anything on github is prohibited.
+- **prohibitedHosts**: This is an array of regular expressions that if any matches the calling pages "document.domain" property will prohibit opening of the dialog. This is done to prevent the invalidation of cross site access safeguards which protect the dialogs scripting data. At least one of the reg expressions should match the dialogs host. By default anything on github is prohibited.
 
-dialogSrc: This is the URL for the file "vmprops.html". The dependencies are expected to be installed relative to this file.
+- **dialogSrc**: This is the URL for the file "vmprops.html". The dependencies are expected to be installed relative to this file.
