@@ -103,10 +103,10 @@ If NoScript is in use an excemption for "razuhl.github.io" must be made. All dep
 
 ### Hosting
 
-Installing the files on a host requires changing the css and js dependencies in the file "vmprops.html". The script can either be configured when initialized or the default values for dialogOrigin, prohibitedHosts and dialogSrc can be edited to accommodate the new host.
+The script can either be configured when initialized or the default values for dialogOrigin, prohibitedHosts and dialogSrc can be edited to accommodate the new host.
 
 dialogOrigin: The exact spelling of the origin reported by messages from "vmprops.html". The origin can be inspected by registering a listener before trying to open the dialog "window.addEventListener('message', function(e){console.log(e);});".
 
 prohibitedHosts: This is an array of regular expressions that if any matches the calling pages "document.domain" property will prohibit opening of the dialog. This is done to prevent the invalidation of cross site access safeguards which protect the dialogs scripting data. At least one of the reg expressions should match the dialogs host. By default anything on github is prohibited.
 
-dialogSrc: This is the URL for the file "vmprops.html".
+dialogSrc: This is the URL for the file "vmprops.html". The dependencies are expected to be installed relative to this file.
