@@ -2,7 +2,7 @@
 
 ## VM Props
 
-A configuration dialog that displays itself in an iframe to isolate itself from the calling pages scope. It encrypts communcation between the window and the iframe to further safeguard the user. The configuration dialog can present simple data structures with tooltips, default values and validation. For its look and feel it uses Bootstrap 4.x.
+A configuration dialog that displays itself in an iframe to isolate itself from the calling pages scope. It encrypts communcation between the window and the iframe to further safeguard the user. The configuration dialog can present JSON data structures with tooltips, default values and validation. For its look and feel it uses Bootstrap 4.x.
 
 It uses GM_\* instructions to automatically save the values. The required grants are GM_setValue, GM_getValue and GM_registerMenuCommand. GM_getMetadata is optional, if no storageKey is specified it will be used to resolve the user scripts name to compute a storageKey.
 
@@ -16,7 +16,7 @@ The VMProps object can be used to manage the values through get, set and save me
 - set(propertyName, value) : Assigns a value to the cache. The change is not persisted.
 - resetValue() : Does set all properties to their default value if one is defined. The change is not persisted.
 - resetValue(propertyName) : Does set the value for the given property name to it's default if defined. The change is not persisted.
-- save(values, validations) : Persist the currently cached values as a JSON object into the monkey database. The validations parameter should be an empty object `{}` that on return will contain all validation results in the form of `{ isValid: [true/false], messages: ['msg1','msg2',...] }` for each registered validator. The return value is true if all validations were valid. Only if the message returns true has the data been persisted. The onSave callback will be invoked if the data was persisted.
+- save(validations) : Persist the currently cached values as a JSON object into the monkey database. The validations parameter can be omitted and otherwise must be an empty object `{}`. On return it will contain all validation results and messages in an internal format. The return value is true if all validations were valid. Only if the function returns true has the data been persisted. The onSave callback will be invoked only if the data was persisted.
 
 ### Example script
 
@@ -24,8 +24,9 @@ The VMProps object can be used to manage the values through get, set and save me
 // ==UserScript==
 // @name Configuration Demo
 // @namespace Violentmonkey Scripts
-// @require https://razuhl.github.io/vmms/vmprops.js
+// @require https://razuhl.github.io/vmms/vmprops.min.js
 // @match http*://*/*
+// @noframes
 // @grant GM_setValue
 // @grant GM_getValue
 // @grant GM_registerMenuCommand
@@ -65,6 +66,12 @@ var cfg = new VMProps({
 			default: true,
 			tooltip: 'True or False flag.'
 		},
+		numberVariable: {
+            type: 'number',
+            label: 'Number',
+            default: 0,
+            tooltip: 'A numeric value'
+        },
 		selectVariable: {
 			type: 'select',
 			label: 'Pick one',
@@ -75,17 +82,99 @@ var cfg = new VMProps({
 		listTextVariable: {
 			type: 'list_text',
 			label: 'Text List',
+			addable: true, //defaults to false
+            removable: true, //defaults to false
+            newEntry: 'New',
 			default: ['first line','second line','third line'],
 			tooltip: 'Variable length list of single independant lines.'
-		}
+		},
+		listNumberVariable: {
+            type: 'list_number',
+            label: 'Number List',
+            addable: true,
+            removable: true,
+            newEntry: 80082,
+            default: [1, 2, 3],
+            tooltip: 'Variable length list of independant numbers.'
+        },
+		objectVariable: {
+            type: 'object',
+            label: 'Object',
+            default: {},
+            tooltip: 'A group of properties that can be configured with their own property configuration and is visually presented behind the objects label.',
+            addable: true,
+            removable: true,
+            newEntry: {textVariable: 'New'},
+            props: {
+                textVariable: {
+                    type: 'text',
+                    label: 'Text',
+                    default: 'Default',
+                    tooltip: 'Single line that is part of a configured object.'
+                }
+            }
+        },
+        listObjectVariable: {
+            type: 'list_object',
+            label: 'Object List',
+            default: [{textVariable:'1'},{textVariable:'2'},{}],
+            tooltip: '...',
+            newEntry: {textVariable: 'New'},
+            addable: true,
+            removable: true,
+            props: {
+                textVariable: {
+                    type: 'text',
+                    label: 'Text',
+                    default: 'Default',
+                    tooltip: 'Single line that is part of a configured object.'
+                }
+            }
+        }
 	},
-	//validation references the properties by their variable name and must conclude by returning true before values can be saved.
-	validators: {
-		//The validation function gets the new value as first argument and a list of string messages to display for the variable as second argument. It must return a boolean result.
-		//Messages can be displayed whether the validation is true or false.
-		textAreaVariable: function(value, messages) { if ( value === 'ok' ) return true; messages.push('must  be ok'); return false; },
-		booleanVariable: function(value, messages) { if ( value ) return true; messages.push('must be true'); return false; },
-		listTextVariable: function(value, messages) { if ( value.length == 2 ) return true; messages.push('must be two'); return false; }
+	//Callbacks use the object structure of properties to define where they are executed.
+	//The available callbacks are converters and validators. All callbacks receive three arguments. The (new) value for the associated property, an array with messages to display if used during validation and the root value to allow cross property conversions/validations.
+	//Converters are used to modify the new values before validation. They are declared one level above the converted property so they can affect the ongoing processing of callbacks. Any messages added will be displayed as hints. The return value is not used.
+	//Validators return a boolean value to determine if the new values should be saved or not. In case of a failed validation a message is expected, otherwise the user will be prompted with "No Message".
+	//Messages are being displayed on properties if they belong to the respective property or it's descendants. Messages for descendant are displayed with a path relative to the property.
+	//Messages belonging to the currently viewed object are displayed after the properties with no path information.
+	//All other messages are shown at the bottom of the dialog with path information from the root object.
+	//Mesages produced for list entries will display the index of the entry in their path and mark individual entries as invalid if validation failed.
+	callbacks: {
+        converter: function(value, messages, allValues) {
+            if ( value.textVariable === 'convert' ) {
+                messages.push('converted');
+                value.textVariable = 'converted';
+            }
+        },
+        textAreaVariable: {
+			validator: function(value, messages, allValues) { if ( value === 'ok' ) return true; messages.push('must  be ok'); return false; }
+		},
+        booleanVariable: {
+			validator: function(value, messages, allValues) { if ( value ) return true; messages.push('must be true'); return false; }
+		},
+		listTextVariable: {
+			validator: function(value, messages, allValues) {
+				//executed for the list as a whole
+				return true; 
+			},
+			entries: {
+				validator: function(value, messages, allValues) {
+					//executed for each list entry
+					return true;
+				}
+			}
+		},
+		objectVariable: {
+			textVariable: {
+				validator: function (value, messages, allValues) { return true; }
+			}
+		},
+		listObjectVariable: {
+			textVariable: {
+				validator: function (value, messages, allValues) { return true; }
+			}
+		}
 	},
 	//callback that can be used to react to value changes
 	onSave: function(values) { console.log(JSON.stringify(values)); }
